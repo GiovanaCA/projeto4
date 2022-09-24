@@ -17,7 +17,7 @@ from datetime import datetime
 
 #   python -m serial.tools.list_ports
 # serialName = "/dev/ttyACM0"           # Ubuntu (variacao de)
-serialName = "COM4" # Mac    (variacao de)
+serialName = "COM7" # Mac    (variacao de)
 #serialName = "/dev/cu.usbmodem11101"  # Mac    (variacao de)
 
 # estrutura de head:
@@ -44,6 +44,7 @@ def main():
     try:
         print("Iniciou o main")
 
+        erro2 = True
         com1 = enlace(serialName)
         com1.enable()
         time.sleep(.2)
@@ -117,7 +118,7 @@ def main():
                     pacote = head + i + eop
                     com1.sendData(np.asarray(pacote))
                     arquivo = open('Client1.txt', 'a')
-                    arquivo.write("{} / envio / 3 / {} / {} / {}\n".format(datetime.now(), len(i)+14, num_pacote, totalpacotes))
+                    arquivo.write("{} / envio / 3 / {} / {} / {}\n".format(datetime.now(), len(i)+14, cont, numPck))
                     arquivo.close()
                     print("Pacote {} enviado" .format(cont))
                     timer1 = time.time()
@@ -153,10 +154,13 @@ def main():
                                     com1.sendData(np.asarray(pacote))
                                     print("Pacote {} enviado" .format(cont))
                                     arquivo = open('Client1.txt', 'a')
-                                    arquivo.write("{} / envio / 3 / {} / {} / {}\n".format(datetime.now(), len(i)+14, num_pacote, totalpacotes))
+                                    arquivo.write("{} / envio / 3 / {} / {} / {}\n".format(datetime.now(), len(i)+14, cont, numPck))
                                     arquivo.close()
                             else:
                                 cont += 1
+                                if cont == 5 and erro2:
+                                    cont = 6
+                                    erro2 = False
                                 tamanho = head[5]
                                 arquivo = open('Client1.txt', 'a')
                                 arquivo.write("{} / receb / 4 / {}\n".format(datetime.now(), tamanho+14))
@@ -169,7 +173,7 @@ def main():
                             com1.sendData(np.asarray(pacote))
                             print("Reenviando pacote {}" .format(cont))
                             arquivo = open('Client1.txt', 'a')
-                            arquivo.write("{} / envio / 3 / {} / {} / {}\n".format(datetime.now(), len(i)+14, num_pacote, totalpacotes))
+                            arquivo.write("{} / envio / 3 / {} / {} / {}\n".format(datetime.now(), len(i)+14, cont, numPck))
                             arquivo.close()
                             timer1 = time.time()       
                         elif (agora-timer2) > 20:
@@ -179,6 +183,7 @@ def main():
                             arquivo.write("{} / envio / 5 / 14\n".format(datetime.now()))
                             arquivo.close()
                             n_sucesso = False
+                            cont = numPck + 1
                             print("Encerra")
 
                         else:

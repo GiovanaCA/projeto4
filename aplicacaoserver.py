@@ -19,7 +19,7 @@ from datetime import datetime
 
 # serialName = "/dev/ttyACM0"           # Ubuntu (variacao de)
 #serialName = "/dev/cu.usbmodem11101"  # Mac    (variacao de)
-serialName = "COM6"                  # Windows(variacao de)
+serialName = "COM8"                  # Windows(variacao de)
 
 def main():
     try:
@@ -86,53 +86,56 @@ def main():
             print("reiniciou")
             timer1 = time.time()
             timer2 = time.time()
-            head, nPacote = com1.getData(10)
-            print(head)
-            numero = head[4]
-            tamanho = head[5]
-            tipo = head[0]
-            print(tipo)
-            #verifica se é do tipo 3
-            if tipo == 3:
-                x, nX = com1.getData(tamanho)
-                string += x
-                eop, nEop = com1.getData(4)
-                arquivo = open('Server1.txt', 'a')
-                arquivo.write("'{}' / receb / 3 / '{}'\n".format(datetime.now(), tamanho+14))
-                arquivo.close()   
-                #verifica se está na ordem
-                if numero == nump+1:
-                    print("numero do pacote esperado certo")
-                    # verifica se é do eop
-                    if eop ==  b'\xAA\xBB\xCC\xDD':
-                        print("eop certo")
-                        cont +=1
-                        nump = head[4]
-                        com1.sendData(b'\x04\x00\x00\x00\x00\x00\x00' + pacote_recebido_certo + b'\x00\x00\xAA\xBB\xCC\xDD')
-                        arquivo = open('Server1.txt', 'a')
-                        arquivo.write("'{}' / envio / 4 / '{}' / '{}' / '{}'\n".format(datetime.now(), hresposta[5]+14, hresposta[4],hresposta[3]))
-                        arquivo.close()
-                        pacote_recebido_certo = bytes([numero])
-                    else:
-                        print("eop errado")
-                        pacote_recebido_errado = nump + 1
-                        com1.sendData(b'\x06\x00\x00\x00\x00\x00' + bytes([pacote_recebido_errado]) + b'\x00\x00\x00\xAA\xBB\xCC\xDD')
-                        arquivo = open('Server2.txt', 'a')
-                        arquivo.write("'{}' / envio / 6 / '{}' / '{}' / '{}'\n".format(datetime.now(), hresposta[5]+14, hresposta[4],hresposta[3]))
-                        arquivo.close()
-                else:
-                    pacote_recebido_errado = nump + 1
-                    print("numero do pacote esperado errado")
-                    com1.sendData(b'\x06\x00\x00\x00\x00\x00' + bytes([pacote_recebido_errado]) + b'\x00\x00\x00\xAA\xBB\xCC\xDD')
-                    arquivo = open('Server2.txt', 'a')
-                    arquivo.write("'{}' / envio / 6 / '{}' / '{}' / '{}'\n".format(datetime.now(), hresposta[5]+14, hresposta[4],hresposta[3]))
-                    arquivo.close()
-            else:
-                time.sleep(.1)
+            n_sucesso = True
+            while n_sucesso:
                 agora = time.time()
-                if agora-timer2 > 20:
+                time.sleep(.1)
+                conteudo = com1.rx.getIsEmpty()
+                if conteudo == False: 
+                    head, nPacote = com1.getData(10)
+                    print(head)
+                    numero = head[4]
+                    tamanho = head[5]
+                    tipo = head[0]
+                    print(tipo)
+                    #verifica se é do tipo 3
+                    if tipo == 3:
+                        x, nX = com1.getData(tamanho)
+                        string += x
+                        eop, nEop = com1.getData(4)
+                        arquivo = open('Server1.txt', 'a')
+                        arquivo.write("'{}' / receb / 3 / '{}'\n".format(datetime.now(), tamanho+14))
+                        arquivo.close()   
+                        #verifica se está na ordem
+                        if numero == nump+1:
+                            print("numero do pacote esperado certo")
+                            # verifica se é do eop
+                            if eop ==  b'\xAA\xBB\xCC\xDD':
+                                print("eop certo")
+                                cont +=1
+                                nump = head[4]
+                                com1.sendData(b'\x04\x00\x00\x00\x00\x00\x00' + pacote_recebido_certo + b'\x00\x00\xAA\xBB\xCC\xDD')
+                                arquivo = open('Server1.txt', 'a')
+                                arquivo.write("'{}' / envio / 4 / '{}' / '{}' / '{}'\n".format(datetime.now(), hresposta[5]+14, hresposta[4],hresposta[3]))
+                                arquivo.close()
+                                pacote_recebido_certo = bytes([numero])
+                            else:
+                                print("eop errado")
+                                pacote_recebido_errado = nump + 1
+                                com1.sendData(b'\x06\x00\x00\x00\x00\x00' + bytes([pacote_recebido_errado]) + b'\x00\x00\x00\xAA\xBB\xCC\xDD')
+                                arquivo = open('Server2.txt', 'a')
+                                arquivo.write("'{}' / envio / 6 / '{}' / '{}' / '{}'\n".format(datetime.now(), hresposta[5]+14, hresposta[4],hresposta[3]))
+                                arquivo.close()
+                        else:
+                            pacote_recebido_errado = nump + 1
+                            print("numero do pacote esperado errado")
+                            com1.sendData(b'\x06\x00\x00\x00\x00\x00' + bytes([pacote_recebido_errado]) + b'\x00\x00\x00\xAA\xBB\xCC\xDD')
+                            arquivo = open('Server1.txt', 'a')
+                            arquivo.write("'{}' / envio / 6 / '{}' / '{}' / '{}'\n".format(datetime.now(), hresposta[5]+14, hresposta[4],hresposta[3]))
+                            arquivo.close()
+                elif agora-timer2 > 20:
                     com1.sendData(b'\x05\x00\x00\x00\x00\x00\x00\x00\x00\x00\xAA\xBB\xCC\xDD')
-                    arquivo = open('Server3.txt', 'a')
+                    arquivo = open('Server1.txt', 'a')
                     arquivo.write("'{}' / envio / 5 / '{}' / '{}' / '{}'\n".format(datetime.now(), hresposta[5]+14, hresposta[4],hresposta[3]))
                     arquivo.close()
                     print("Time out")
@@ -142,10 +145,9 @@ def main():
                     print("Comunicação encerrada")
                     print("-------------------------")
                     break
-                else:
-                    if agora-timer1 > 2:
+                elif agora-timer1 > 2:
                         com1.sendData(b'\x04\x00\x00\x00\x00\x00\x00\x00\x00\x00\xAA\xBB\xCC\xDD')
-                        arquivo = open('Server4.txt', 'a')
+                        arquivo = open('Server1.txt', 'a')
                         arquivo.write("'{}' / envio / 4 / '{}' / '{}' / '{}'\n".format(datetime.now(), hresposta[5]+14, hresposta[4],hresposta[3]))
                         arquivo.close()
                         timer1 = time.time()
