@@ -17,7 +17,7 @@ from datetime import datetime
 
 #   python -m serial.tools.list_ports
 # serialName = "/dev/ttyACM0"           # Ubuntu (variacao de)
-serialName = "COM7" # Mac    (variacao de)
+serialName = "COM5" # Mac    (variacao de)
 #serialName = "/dev/cu.usbmodem11101"  # Mac    (variacao de)
 
 # estrutura de head:
@@ -52,7 +52,7 @@ def main():
         time.sleep(1)
         print("Abriu a comunicação")
 
-        img = "img.png"
+        img = "craw.png"
 
 		# FORMANDO PAYLOAD
         pl = []
@@ -134,17 +134,16 @@ def main():
                             print(head)
                             if head[0] != 4:
                                 print(head)
-                                s_head, n = com1.getData(10)
-                                num2 = s_head[3]
-                                num_pacote = s_head[4]
-                                tam_payload = s_head[5]
-                                pacote_a_enviar = s_head[6]
+                                num2 = head[3]
+                                num_pacote = head[4]
+                                tam_payload = head[5]
+                                pacote_a_enviar = head[6]
                                 payload, n2 = com1.getData(num2)
                                 eop, n3 = com1.getData(4)
                                 arquivo = open('Client1.txt', 'a')
                                 arquivo.write("{} / receb / {} / 14\n".format(datetime.now(), num2))
                                 arquivo.close()
-                                if s_head[0] != b'\x06':
+                                if head[0] != b'\x06':
                                     print("O pacote nao esta errado")
                                 else:
                                     timer1 = time.time()
@@ -158,9 +157,9 @@ def main():
                                     arquivo.close()
                             else:
                                 cont += 1
-                                if cont == 5 and erro2:
-                                    cont = 6
-                                    erro2 = False
+                                # if cont == 5 and erro2:
+                                #     cont = 6
+                                #     erro2 = False
                                 tamanho = head[5]
                                 arquivo = open('Client1.txt', 'a')
                                 arquivo.write("{} / receb / 4 / {}\n".format(datetime.now(), tamanho+14))
